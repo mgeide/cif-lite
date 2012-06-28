@@ -1,0 +1,90 @@
+
++---------+
+| INSTALL | 
++---------+ 
+
+This assumes that you already have CIF v0.01 installed and working (in /opt/cif)
+
+Note: read the ISSUES file first as some pieces are not completed yet!
+
++--------------------------------------+
+| Step 1: create the CIF Lite database |
++--------------------------------------+
+
+$ psql -U postgres      (assuming your using the "postgres" user account)
+psql> CREATE DATABASE cif_lite
+psql> \i cif-lite.sql  
+
++------------------------------------------------------------------+
+| Step 2: fix a bug in the CIF code for support of other functions |
++------------------------------------------------------------------+
+
+In /opt/cif/lib/CIF/FeedParser.pm
+In the process function begining at line 258
+
+Change:
+
+    if(scalar @{$batches} == 1){
+        insert($config,$recs);
+    } else { 
+       ....
+
+To:
+    if(scalar @{$batches} == 1){
+        { 
+          no strict "refs";
+          &$fctn($config,$recs);
+        }
+    } else { 
+       ....
+
++---------------------------------------------+
+| Step 3: move CIF Lite scripts to their home |
++---------------------------------------------+
+
+$ mv ./lib/Lite.pm /opt/cif/lib/Lite.pm
+$ mv ./bin/cif_feedparser_lite /opt/cif/bin/cif_feedparser_lite
+$ mv ./bin/cif_lite_client /opt/cif/bin/cif_lite_client
+$ mv ./etc/server_lite.ini /opt/cif/etc/server_lite.ini
+
+Edit /opt/cif/etc/server_lite.ini to reflect you CIF Lite database location / settings. 
+I used "cif_lite" as my default CIF Lite database name.
+
+Make sure the scripts you added to /opt/cif/bin are executable:
+$ chmod 775 /opt/cif/bin/cif_feedparser_lite
+$ chmod 775 /opt/cif/bin/cif_lite_client
+
++---------------------------+
+| Step 4: Test / Query data |
++---------------------------+
+
+Try running cif_feedparser_lite against one of your feeds (-c <cfgfile> -f <feedname>):
+$ perl /opt/cif/bin/cif_feedparser_lite -c /opt/cif/etc/zeustracker.cfg -f domainblocklist -T low -F
+
+You should see a bunch of lines like:
+[DEBUG] INSERTED 427e036f-307b-3724-8fdf-c57d5a861265 -- 08studio.net.
+...
+This means that it's working.
+
+Now you can see this CIF data in your CIF Lite database manually:
+$ psql -U postgres -d cif_lite
+psql> SELECT * FROM cif_lite_data
+
+And test access via the CIF Lite client:
+/opt/cif/bin/cif_feedparser_lite -q 08studio.net
+/opt/cif/bin/cif_feedparser_lite -q 08studio%
+Where % instructs the query engine to do a SQL LIKE regex
+
++-------------------+
+| Step 5: Implement |
++-------------------+
+
+If you like this CIF Lite format or want to switch to your schema own following the methodology I used,
+modify your "cif_crontool" cron scripts to use the -C option to specify your script, e.g.,
+
+$ crontab -e
+
+Edit the crontool to use cif_feedparser_lite:
+15     *       * * * /opt/cif/bin/cif_crontool -C /opt/cif/bin/cif_feedparser_lite -p hourly -T low &> /dev/null
+30     00      * * * /opt/cif/bin/cif_crontool -C /opt/cif/bin/cif_feedparser_lite -p daily -T low &> /dev/null
+

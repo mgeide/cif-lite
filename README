@@ -1,0 +1,30 @@
+
+This is some Perl code that leverages the CIF framework:
+http://code.google.com/p/collective-intelligence-framework/
+
+Note: this was built around the CIF 0.01 release code.
+
+The code demonstrates using the original CIF framework code
+to pull and parse your various datafeeds (levering CIF .cfg
+files that you've built in /opt/cif/etc).
+
+However, I was interested in normalizing and storing the data
+in a different format than the default CIF IODEF texts that CIF
+uses. This code could also be extended to other databases, I stuck
+with Postgres since that's what CIF was already using.
+
+The CIF framework is awesome, however, depending on your usage of it
+there may be parts of the storage schema that are not ideal.  For example,
+ - The IODEF records and table indexing may be overkill / extra storage expense for your needs
+ - CIF doesn't use the concept of first seen / last seen, so it will store entries repeatedly while they remain in datafeeds
+ - You may want to do queries against the data where the original CIF schema is not ideal to your needs
+ 
+The storage schema that I'm using can be seen in the cif-lite.sql file.
+
+Supported CIF values:
+- address
+- malware_md5
+- malware_sha1
+- md5
+
+
