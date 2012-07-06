@@ -3,6 +3,10 @@
 | ISSUES / TODO |
 +---------------+
 
+* ISSUE: I'm seeing that the cif_lite_data table is growing very quickly with a variety of data (IPs, netblocks, domains, URLs, MD5, SHA1)
+I'm thinking that it may be best to store each type in its own table for faster searching ... also allows better capability with things
+like IP or Netblock (e.g., store IP in integer format).
+
 * TODO: Extend the CIF Lite query for further types of queries, such as those against "cif_recent_additions"
 
 * TODO: Extend the CIF Lite query to the RESTful API or wrapper around the existing CIF client tool to be able 
