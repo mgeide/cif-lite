@@ -3,9 +3,6 @@
 | ISSUES / TODO |
 +---------------+
 
-* ISSUE: I'm seeing that the cif_lite_data table is growing very quickly with a variety of data (IPs, netblocks, domains, URLs, MD5, SHA1)
-I'm thinking that it may be best to store each type in its own table for faster searching ... also allows better capability with things
-like IP or Netblock (e.g., store IP in integer format).
 
 * TODO: Extend the CIF Lite query for further types of queries, such as those against "cif_recent_additions"
 
@@ -22,13 +19,6 @@ what is new to make appends into your blocklists.
 * TODO: Build a "conversion" script to migrate data that is already in CIF into CIF Lite
 
 * TODO: Wrapper around cif_analytics for CIF Lite?
-
-* LIMITATION ISSUE: Linkages within the data entries are not preserved, e.g., 
-a datafeed that has three fields url,md5,sha1 -- each field would be stored separately as a "value"
-in the CIF Lite database without there being a relationship among them.
-This linkage isn't currently needed from the perspective of automating the process
-of generating blocklists and just storage/retrieval of indicators.  But the linkage information
-is important to have when going back and conducting analysis on a specific incident/event.
 
 * TODO: Wes just pushed out CIF v1 Beta2 ... I haven't looked at this code yet to see if CIF Lite
 can be integrated the same way as I did in v0.01.
