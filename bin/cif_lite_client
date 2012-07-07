@@ -53,6 +53,7 @@ if(-e $server_config){
 }
 die usage() if($opts{'h'});
 my $query                  = $opts{'q'} || die($!.' Invalid query');
+my $query_type             = $opts{'t'} || '';
 my $severity_restriction   = $opts{'s'} || '';
 my $confidence_restriction = $opts{'c'} || 0;
 my $impact_restriction     = $opts{'i'} || ''; 
@@ -63,13 +64,14 @@ print "[DEBUG] Query $query\n";
 sub usage {
     return <<EOF;
 Usage: perl $0 -q example.com
-    -h  --help:     this message
-    -S  --sconfig:  server config location (database stuff, default: $server_config)
-    -f  --feed:     restrict query to a specific source or datafeed
+    -h  --help:       this message
+    -S  --sconfig:    server config location (database stuff, default: $server_config)
+    -f  --feed:       restrict query to a specific source or datafeed
     -c  --confidence: restrict query to a specific minimum confidence
     -s  --severity:   restrict query to a specific minimum severity
     -i  --impact:     restrict query to be specific impact type
-    -q  --query:      query string to search for, can use '%' for wildcards 
+    -q  --query:      query string to search for, can use '%' for wildcards
+    -t  --type:       type of query (e.g., ip, domain, url, email, md5, sha1) 
 EOF
 }
 
@@ -82,7 +84,13 @@ if($sconfig && $sconfig->param(-block => 'database')){
 my $db_config = $c_href->{'database'};
 my $dbh = DBI->connect($db_config->[0], $db_config->[1], $db_config->[2], $db_config->[3]) or die "[ERROR] connection to DB failed $DBI::errstr\n";
 
-my $select_stmt = "SELECT * FROM cif_lite_data WHERE ";
+my @query_types = ('ip', 'domain', 'url', 'email', 'md5', 'sha1');
+if ($query_type ne '') {
+	@query_types = ($query_type);
+}
+
+foreach my $type (@query_types) {
+my $select_stmt = "SELECT * FROM cif_lite_$type WHERE ";
 my @constraints;
 my %impact_lookup;
 my %source_lookup;
@@ -151,6 +159,7 @@ while (my $select_row = $select_sth->fetchrow_hashref()) {
   print "\n";
 }
 $select_sth->finish;
+}
 
 $dbh->disconnect();
 exit(0);
