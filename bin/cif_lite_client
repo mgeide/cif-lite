@@ -84,12 +84,37 @@ if($sconfig && $sconfig->param(-block => 'database')){
 my $db_config = $c_href->{'database'};
 my $dbh = DBI->connect($db_config->[0], $db_config->[1], $db_config->[2], $db_config->[3]) or die "[ERROR] connection to DB failed $DBI::errstr\n";
 
-my @query_types = ('ip', 'domain', 'url', 'email', 'md5', 'sha1');
+my %query_types = ('ip'     => 1, 
+		   'domain' => 1, 
+		   'url'    => 1, 
+		   'email'  => 1,
+		   'md5'    => 1, 
+		   'sha1'   => 1);
 if ($query_type ne '') {
-	@query_types = ($query_type);
+	%query_types = ($query_type => 1);
+} else {
+  if ($query =~ /[A-Za-z]/) { 
+	$query_types{'ip'} = 0; 
+  }
+  if ($query =~ /\%/) {
+  	$query_types{'ip'} = 0; 
+	$query_types{'sha1'} = 0; 
+	$query_types{'md5'} = 0; 
+  }
+  if ($query =~ /[G-Zg-z]/) {
+  	$query_types{'sha1'} = 0;
+        $query_types{'md5'} = 0;
+  }
+  if ($query =~ /[\~\!\#\$\&\^\*\=\+\:\;\,\?\/\'\"]/) {
+   	%query_types = ('url' => 1); 
+  }
+  if ($query =~ /\@/) {
+    	%query_types = ('email' => 1);
+  } 
 }
 
-foreach my $type (@query_types) {
+foreach my $type (keys %query_types) {
+if ($query_types{$type} == 0) { next; }
 my $select_stmt = "SELECT * FROM cif_lite_$type WHERE ";
 my @constraints;
 my %impact_lookup;
