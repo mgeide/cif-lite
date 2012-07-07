@@ -11,7 +11,7 @@ use warnings;
 use DateTime;
 use OSSP::uuid;
 use Class::DBI;
-#use Data::Dumper; # For debugging
+use Data::Dumper; # For debugging
 
 #################################
 # GLOBALs / Configuration
@@ -103,17 +103,24 @@ sub _sql_statements {
   
   my %sths;
   
+  # Select impact id
+  $sths{"select impact id"} = $dbh->prepare("SELECT MAX(id) FROM cif_impact_lookup")
+                              or die "[ERROR] Preparing Impact Id Select statement: " . $dbh->errstr . "\n";
   # Select impacts
   $sths{"select impacts"} = $dbh->prepare("SELECT * FROM cif_impact_lookup")
   							or die "[ERROR] Preparing Impact Select Statement: " . $dbh->errstr . "\n";
   # Insert impacts
-  $sths{"insert impacts"} = $dbh->prepare("INSERT INTO cif_impact_lookup (impact) VALUES (?) RETURNING id")
+  $sths{"insert impacts"} = $dbh->prepare("INSERT INTO cif_impact_lookup (id, impact) VALUES (?, ?)")
                           	or die "[ERROR] Preparing Impact insert statement: " . $dbh->errstr . "\n";
+  # Select source id
+  $sths{"select source id"} = $dbh->prepare("SELECT MAX(id) FROM cif_source_lookup")
+			      or die "[ERROR] Preparing Source Id Select statement: " . $dbh->errstr . "\n";  
+
   # Select sources
   $sths{"select sources"} = $dbh->prepare("SELECT * FROM cif_source_lookup")
                           	or die "[ERROR] Preparing Source select statement: " . $dbh->errstr . "\n";
   # Insert sources
-  $sths{"insert sources"} = $dbh->prepare("INSERT INTO cif_source_lookup (source) VALUES (?) RETURNING id")
+  $sths{"insert sources"} = $dbh->prepare("INSERT INTO cif_source_lookup (id, source) VALUES (?, ?)")
                           	or die "[ERROR] Preparing Source insert statement: " . $dbh->errstr . "\n";
  
   
@@ -178,7 +185,15 @@ sub _add_impact {
   my $sth_href = shift;
   my $impact   = shift;
 
-  my $retval = ($sth_href->{"insert impacts"})->execute($impact); 
+  my $select_retval  = ($sth_href->{"select impact id"})->execute or die "[ERROR] executing Impact Id select statement: " . $dbh->errstr . "\n";
+  my $select_id_href = ($sth_href->{"select impact id"})->fetchrow_arrayref();
+  my $next_impact_id = 1;
+  if ($select_id_href) {
+    $next_impact_id = ($select_id_href->[0]) + 1;
+  } 
+  ($sth_href->{"select impact id"})->finish; 
+
+  my $retval = ($sth_href->{"insert impacts"})->execute($next_impact_id, $impact); 
   if (!$retval) {
   	($sth_href->{"insert impacts"})->finish;
     my $impacts_href = _get_impacts($dbh, $sth_href);
@@ -187,10 +202,11 @@ sub _add_impact {
     } 
     return -1;
   } else {
-    my $rowval = ($sth_href->{"insert impacts"})->fetchrow_hashref();
-    ($sth_href->{"insert impacts"})->finish;
-    print "[DEBUG] Adding impact " . $impact . " (" . $rowval->{'id'} . ").\n"; 
-    return $rowval->{'id'};
+    return $next_impact_id;
+    #my $rowval = ($sth_href->{"insert impacts"})->fetchrow_hashref();
+    #($sth_href->{"insert impacts"})->finish;
+    #print "[DEBUG] Adding impact " . $impact . " (" . $rowval->{'id'} . ").\n"; 
+    #return $rowval->{'id'};
   }
 }
 
@@ -224,7 +240,15 @@ sub _add_source {
   my $sth_href = shift;
   my $source   = shift;
 
-  my $retval = ($sth_href->{"insert sources"})->execute($source); 
+  my $select_retval  = ($sth_href->{"select source id"})->execute or die "[ERROR] executing Source Id select statement: " . $dbh->errstr . "\n";
+  my $select_id_href = ($sth_href->{"select source id"})->fetchrow_arrayref();
+  my $next_source_id = 1;  
+  if ($select_id_href) {
+    $next_source_id = ($select_id_href->[0]) + 1;
+  }
+  ($sth_href->{"select source id"})->finish; 
+
+  my $retval = ($sth_href->{"insert sources"})->execute($next_source_id, $source); 
   if (!$retval) {
     ($sth_href->{"insert sources"})->finish;
     my $sources_href = _get_sources($dbh, $sth_href);
@@ -233,10 +257,11 @@ sub _add_source {
     }
     return -1;
   } else {
-    my $rowval = ($sth_href->{"insert sources"})->fetchrow_hashref();
-    ($sth_href->{"insert sources"})->finish;
-    print "[DEBUG] Adding source " . $source . " (" . $rowval->{'id'} . ").\n";
-    return $rowval->{'id'}; 
+    return $next_source_id;
+    #my $rowval = ($sth_href->{"insert sources"})->fetchrow_hashref();
+    #($sth_href->{"insert sources"})->finish;
+    #print "[DEBUG] Adding source " . $source . " (" . $rowval->{'id'} . ").\n";
+    #return $rowval->{'id'}; 
   }
 }
 
@@ -422,7 +447,10 @@ sub _normalize_record {
 
   ## Record value based on key name (domain, url, etc.)
   if (exists $rec->{$value_key}) {
-    $nrec{'value'} = $rec->{$value_key};
+    if (defined $rec->{$value_key}) {    
+      $nrec{'value'} = $rec->{$value_key};
+    }
+    else { return -6; }
   } else { 
     print "[DEBUG, ERROR] a value field does not exist in CIF record.\n";
     return -6; 
@@ -430,7 +458,7 @@ sub _normalize_record {
 
   ## Make sure the value has some sort of length
   if (length($nrec{'value'}) < $_MIN_VALUE_LENGTH) {
-  	print "[DEBUG, ERROR] value does not meet minimum length requirement.\n"; 
+    print "[DEBUG, ERROR] value ('" . $nrec{'value'} . "') does not meet minimum length requirement.\n"; 
     return -7; 
   }
 

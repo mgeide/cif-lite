@@ -47,7 +47,7 @@ CREATE TABLE cif_lite_ip (
 	last_seen	    TIMESTAMP DEFAULT now(),
 	source_id	    SMALLINT NOT NULL,  		
 	impact_id	    SMALLINT NOT NULL,  		
-	severity_enum	CHAR(1) NOT NULL DEFAULT 'U',  	
+	severity_enum	    CHAR(1) NOT NULL DEFAULT 'U',  	
 	confidence	    SMALLINT NOT NULL DEFAULT 0,
 	description	    TEXT	
 );
@@ -65,9 +65,9 @@ CREATE TABLE cif_lite_domain (
 	last_seen	    TIMESTAMP DEFAULT now(),
 	source_id	    SMALLINT NOT NULL,  		
 	impact_id	    SMALLINT NOT NULL,  		
-	severity_enum	CHAR(1) NOT NULL DEFAULT 'U',  	
+	severity_enum	    CHAR(1) NOT NULL DEFAULT 'U',  	
 	confidence	    SMALLINT NOT NULL DEFAULT 0,
-	description 	TEXT	
+	description 	    TEXT	
 );
 DROP INDEX IF EXISTS domain_value_idx CASCADE;
 CREATE INDEX domain_value_idx ON cif_lite_domain (value text_pattern_ops);
@@ -83,9 +83,9 @@ CREATE TABLE cif_lite_url (
 	last_seen	    TIMESTAMP DEFAULT now(),
 	source_id	    SMALLINT NOT NULL,  		
 	impact_id	    SMALLINT NOT NULL,  		
-	severity_enum	CHAR(1) NOT NULL DEFAULT 'U',  	
+	severity_enum	    CHAR(1) NOT NULL DEFAULT 'U',  	
 	confidence	    SMALLINT NOT NULL DEFAULT 0,
-	description 	TEXT	
+	description 	    TEXT	
 );
 DROP INDEX IF EXISTS url_value_idx CASCADE;
 CREATE INDEX url_value_idx ON cif_lite_url (value text_pattern_ops);
@@ -101,9 +101,9 @@ CREATE TABLE cif_lite_email (
 	last_seen	    TIMESTAMP DEFAULT now(),
 	source_id	    SMALLINT NOT NULL,  		
 	impact_id	    SMALLINT NOT NULL,  		
-	severity_enum	CHAR(1) NOT NULL DEFAULT 'U',  	
+	severity_enum	    CHAR(1) NOT NULL DEFAULT 'U',  	
 	confidence	    SMALLINT NOT NULL DEFAULT 0,
-	description 	TEXT	
+	description 	    TEXT	
 );
 DROP INDEX IF EXISTS email_value_idx CASCADE;
 CREATE INDEX email_value_idx ON cif_lite_email (value text_pattern_ops);
@@ -119,7 +119,7 @@ CREATE TABLE cif_lite_md5 (
 	last_seen	    TIMESTAMP DEFAULT now(),
 	source_id	    SMALLINT NOT NULL,  		
 	impact_id	    SMALLINT NOT NULL,  		
-	severity_enum	CHAR(1) NOT NULL DEFAULT 'U',  	
+	severity_enum	    CHAR(1) NOT NULL DEFAULT 'U',  	
 	confidence	    SMALLINT NOT NULL DEFAULT 0,
 	description	    TEXT	
 );
@@ -137,7 +137,7 @@ CREATE TABLE cif_lite_sha1 (
 	last_seen	    TIMESTAMP DEFAULT now(),
 	source_id	    SMALLINT NOT NULL,  		
 	impact_id	    SMALLINT NOT NULL,  		
-	severity_enum	CHAR(1) NOT NULL DEFAULT 'U',  	
+	severity_enum	    CHAR(1) NOT NULL DEFAULT 'U',  	
 	confidence	    SMALLINT NOT NULL DEFAULT 0,
 	description	    TEXT	
 );
@@ -147,26 +147,20 @@ CREATE INDEX sha1_value_idx ON cif_lite_sha1 (value);
 -- ------------- --
 -- Impact lookup --
 -- ------------- --
-DROP SEQUENCE IF EXISTS impact_id_seq CASCADE;
-CREATE SEQUENCE impact_id_seq;
 DROP TABLE IF EXISTS cif_impact_lookup CASCADE;
 CREATE TABLE cif_impact_lookup (
-	id	SMALLINT NOT NULL PRIMARY KEY DEFAULT nextval('impact_id_seq'),
+	id	SMALLINT NOT NULL PRIMARY KEY,
 	impact	TEXT NOT NULL UNIQUE
 );
-ALTER SEQUENCE impact_id_seq OWNED BY cif_impact_lookup.id;
 
 -- ------------- --
 -- Source lookup --
 -- ------------- --
-DROP SEQUENCE IF EXISTS source_id_seq CASCADE;
-CREATE SEQUENCE source_id_seq;
 DROP TABLE IF EXISTS cif_source_lookup CASCADE;
 CREATE TABLE cif_source_lookup (
-	id 	SMALLINT NOT NULL PRIMARY KEY DEFAULT nextval('source_id_seq'),
+	id 	SMALLINT NOT NULL PRIMARY KEY,
 	source	TEXT NOT NULL UNIQUE
 );
-ALTER SEQUENCE source_id_seq OWNED BY cif_source_lookup.id;
 
 -- ---------- --
 -- Recent IPs --
@@ -227,8 +221,8 @@ CREATE TABLE cif_recent_sha1 (
 -- --------- --
 DROP TABLE IF EXISTS cif_relations CASCADE;
 CREATE TABLE cif_relations (
-	id				SERIAL PRIMARY KEY,
-	relation_uuid	UUID NOT NULL,
+	id	                SERIAL PRIMARY KEY,
+	relation_uuid	        UUID NOT NULL,
 	entity_type		CHAR(1) NOT NULL, -- Enum: I=IP, U=URL, D=Domain, M=MD5, S=SHA1, E=Email
 	entity_uuid		UUID NOT NULL
 );

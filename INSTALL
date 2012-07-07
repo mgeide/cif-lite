@@ -13,6 +13,7 @@ Note: read the ISSUES file first as some pieces are not completed yet!
 
 $ psql -U postgres      (assuming your using the "postgres" user account)
 psql> CREATE DATABASE cif_lite
+psql> \c cif_lite
 psql> \i cif-lite.sql  
 
 +------------------------------------------------------------------+
@@ -61,6 +62,11 @@ $ chmod 775 /opt/cif/bin/cif_lite_client
 Try running cif_feedparser_lite against one of your feeds (-c <cfgfile> -f <feedname>):
 $ perl /opt/cif/bin/cif_feedparser_lite -c /opt/cif/etc/zeustracker.cfg -f domainblocklist -T low -F
 
+Note: the .cfg files used for CIF-Lite have been slightly modified. CIF was using the field "address" for
+IPs, domains, URLs, email addresses, etc.  In CIF-Lite this is specified to reduce the number of checks made
+against the data.  So if your feed is a domain blocklist use the field "domain" instead of "address."  All of
+the basic CIF .cfg files have been modified in etc to reflect this change.
+
 You should see a bunch of lines like:
 [DEBUG] INSERTED 427e036f-307b-3724-8fdf-c57d5a861265 -- 08studio.net.
 ...
@@ -68,7 +74,7 @@ This means that it's working.
 
 Now you can see this CIF data in your CIF Lite database manually:
 $ psql -U postgres -d cif_lite
-psql> SELECT * FROM cif_lite_data
+psql> SELECT * FROM cif_lite_domain
 
 And test access via the CIF Lite client:
 /opt/cif/bin/cif_feedparser_lite -q 08studio.net
