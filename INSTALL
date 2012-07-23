@@ -109,3 +109,8 @@ Edit the crontool to use cif_feedparser_lite:
 15     *       * * * /opt/cif/bin/cif_crontool -C /opt/cif/bin/cif_feedparser_lite -p hourly -T low &> /dev/null
 30     00      * * * /opt/cif/bin/cif_crontool -C /opt/cif/bin/cif_feedparser_lite -p daily -T low &> /dev/null
 
+Note: you'll also want a script in place to expire old entries from your "recent" tables that will be used for generating your blocklist updates.
+If /home/cif/cif-lite is where you cloned the code, e.g.,
+
+00      00      * * * /usr/bin/perl /home/cif/cif-lite/cif-lite/tools/expire_recent.pl
+
