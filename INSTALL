@@ -16,8 +16,23 @@ psql> CREATE DATABASE cif_lite
 psql> \c cif_lite
 psql> \i cif-lite.sql  
 
++-----------------------------------------+
+| Step 2: Turn off Postgres ERROR logging |
++-----------------------------------------+
+
+In /etc/postgres/9.1/main/postgresql.conf
+set these values:
+log_min_messages = log 
+log_min_error_statement = log 
+
+The CIF-Lite logic effectively first tries to do an insert of a record,
+if the insert fails because of a duplicate key, then we know that the record
+already exists, so then an update is done. This is faster than doing a select then
+insert or update - the problem is that every failed insert gets logged as an
+ERROR in postgres. Setting the minimum logging threshold to "log" ignores "errors." 
+
 +------------------------------------------------------------------+
-| Step 2: fix a bug in the CIF code for support of other functions |
+| Step 3: fix a bug in the CIF code for support of other functions |
 +------------------------------------------------------------------+
 
 In /opt/cif/lib/CIF/FeedParser.pm
@@ -40,7 +55,7 @@ To:
        ....
 
 +---------------------------------------------+
-| Step 3: move CIF Lite scripts to their home |
+| Step 4: move CIF Lite scripts to their home |
 +---------------------------------------------+
 
 $ mv ./lib/Lite.pm /opt/cif/lib/Lite.pm
@@ -56,7 +71,7 @@ $ chmod 775 /opt/cif/bin/cif_feedparser_lite
 $ chmod 775 /opt/cif/bin/cif_lite_client
 
 +---------------------------+
-| Step 4: Test / Query data |
+| Step 5: Test / Query data |
 +---------------------------+
 
 Try running cif_feedparser_lite against one of your feeds (-c <cfgfile> -f <feedname>):
@@ -82,7 +97,7 @@ And test access via the CIF Lite client:
 Where % instructs the query engine to do a SQL LIKE regex
 
 +-------------------+
-| Step 5: Implement |
+| Step 6: Implement |
 +-------------------+
 
 If you like this CIF Lite format or want to switch to your schema own following the methodology I used,

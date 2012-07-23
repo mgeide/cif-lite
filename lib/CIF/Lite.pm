@@ -19,12 +19,12 @@ use Data::Dumper; # For debugging
 #################################
 
 my %_RECTYPE_ENUM = ( 'ip'     => 'I',
-					  'domain' => 'D',
-					  'url'    => 'U',
-					  'email'  => 'E',
-					  'md5'    => 'M',
-					  'sha1'   => 'S',
-					);
+		      'domain' => 'D',
+	       	      'url'    => 'U',
+		      'email'  => 'E',
+		      'md5'    => 'M',
+		      'sha1'   => 'S',
+		    );
 
 my %_SEVERITY_ENUM = ( 'high'   => 'H',
                        'medium' => 'M',
